@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteer Dashboard - My Neta PMC Elections</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <!-- Main App -->
+    <div id="app">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center">
+                    <img src="/img/11684.jpg"
+                         alt="Volunteer Logo" class="rounded-circle me-3" width="40" height="40">
+                    <div>
+                        <h5 class="mb-0 text-white">Volunteer Panel</h5>
+                        <small class="text-light">PMC Elections</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-page="dashboard">
+                            <i class="fas fa-chart-pie me-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="voters">
+                            <i class="fas fa-users me-3"></i>
+                            <span>Voter Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="complaints">
+                            <i class="fas fa-exclamation-triangle me-3"></i>
+                            <span>Complaints</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="events">
+                            <i class="fas fa-calendar-alt me-3"></i>
+                            <span>Events & Campaigns</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="tasks">
+                            <i class="fas fa-tasks me-3"></i>
+                            <span>My Tasks</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <img src="/img/11684.jpg"
+                         alt="Volunteer" class="rounded-circle me-2" width="32" height="32">
+                    <div>
+                        <div class="text-white small fw-semibold" id="userName">Volunteer User</div>
+                        <div class="text-light small" id="userRole">Volunteer</div>
+                    </div>
+                </div>
+                <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+                <div class="container-fluid">
+                    <button class="btn btn-link" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="navbar-nav ms-auto">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-bell text-muted"></i>
+                                <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="notificationCount">3</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Notifications</h6></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-exclamation-circle text-warning me-2"></i>New task assigned</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-calendar text-info me-2"></i>Event tomorrow</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-check-circle text-success me-2"></i>Task completed</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="content-wrapper">
+                <!-- Dashboard Page -->
+                <div id="dashboard" class="page-content">
+                    <!-- Hero Banner -->
+                    <div class="hero-banner mb-4">
+                        <div class="hero-content">
+                            <div class="hero-text">
+                                <h1 class="display-4 fw-bold text-white mb-3">Volunteer Dashboard</h1>    
+                                <p class="lead text-white-50 mb-4">Support Swati Subhash Dhore's PMC Election Campaign</p>
+                                <div class="hero-stats">
+                                    <div class="stat-item">
+                                        <h3 class="text-white mb-0" id="myTasks">5</h3>
+                                        <small class="text-white-50">My Tasks</small>
+                                    </div>
+                                    <div class="stat-item">
+                                        <h3 class="text-white mb-0" id="completedTasks">12</h3>
+                                        <small class="text-white-50">Completed</small>
+                                    </div>
+                                    <div class="stat-item">
+                                        <h3 class="text-white mb-0" id="votersContacted">45</h3>
+                                        <small class="text-white-50">Voters Contacted</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hero-image">
+                                <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop"
+                                     alt="Volunteer Work" class="img-fluid rounded-3 shadow">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-primary">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number" id="statTasks">5</h3>
+                                    <p class="stat-label">Active Tasks</p>
+                                    <small class="text-info"><i class="fas fa-clock me-1"></i>Due this week</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number" id="statCompleted">12</h3>
+                                    <p class="stat-label">Completed Tasks</p>
+                                    <small class="text-success"><i class="fas fa-arrow-up me-1"></i>+3 this week</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-warning">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number" id="statVoters">45</h3>
+                                    <p class="stat-label">Voters Contacted</p>
+                                    <small class="text-info"><i class="fas fa-phone me-1"></i>This month</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-info">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h3 class="stat-number" id="statEvents">3</h3>
+                                    <p class="stat-label">Upcoming Events</p>
+                                    <small class="text-info"><i class="fas fa-calendar me-1"></i>This week</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-tasks me-2 text-primary"></i>
+                                        My Recent Tasks
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="task-list">
+                                        <div class="task-item d-flex justify-content-between align-items-center p-3 border rounded mb-2">
+                                            <div>
+                                                <h6 class="mb-1">Contact voters in Shivajinagar area</h6>
+                                                <small class="text-muted">Due: Tomorrow, 2:00 PM</small>
+                                            </div>
+                                            <span class="badge bg-warning">In Progress</span>
+                                        </div>
+                                        <div class="task-item d-flex justify-content-between align-items-center p-3 border rounded mb-2">
+                                            <div>
+                                                <h6 class="mb-1">Distribute campaign materials</h6>
+                                                <small class="text-muted">Due: Dec 20, 2024</small>
+                                            </div>
+                                            <span class="badge bg-primary">Pending</span>
+                                        </div>
+                                        <div class="task-item d-flex justify-content-between align-items-center p-3 border rounded mb-2">
+                                            <div>
+                                                <h6 class="mb-1">Attend community meeting</h6>
+                                                <small class="text-muted">Completed: Dec 15, 2024</small>
+                                            </div>
+                                            <span class="badge bg-success">Completed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-pie me-2 text-success"></i>
+                                        Task Progress
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="taskChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voters Page -->
+                <div id="voters" class="page-content d-none">
+                    <div class="page-header mb-4">
+                        <h2 class="page-title">
+                            <i class="fas fa-users me-2 text-primary"></i>
+                            Voter Management
+                        </h2>
+                        <p class="text-muted">View and manage voter information in your assigned area</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" id="voterSearch" placeholder="Search voters...">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button class="btn btn-primary" id="addVoterBtn">
+                                        <i class="fas fa-plus me-2"></i>Add New Voter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>Booth</th>
+                                            <th>Phone</th>
+                                            <th>Category</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="voterTableBody">
+                                        <tr>
+                                            <td>Rahul Patil</td>
+                                            <td>Shivajinagar, Pune</td>
+                                            <td>Booth-1</td>
+                                            <td>9876543210</td>
+                                            <td><span class="badge bg-success">Supporter</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                                                <button class="btn btn-sm btn-outline-success">Contact</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Sneha Kulkarni</td>
+                                            <td>Kothrud, Pune</td>
+                                            <td>Booth-2</td>
+                                            <td>9876501234</td>
+                                            <td><span class="badge bg-warning">Neutral</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                                                <button class="btn btn-sm btn-outline-success">Contact</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complaints Page -->
+                <div id="complaints" class="page-content d-none">
+                    <div class="page-header mb-4">
+                        <h2 class="page-title">
+                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                            Complaint Management
+                        </h2>
+                        <p class="text-muted">View and update complaints in your assigned area</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <select class="form-select" id="complaintFilter">
+                                        <option value="">All Status</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="resolved">Resolved</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button class="btn btn-warning" id="addComplaintBtn">
+                                        <i class="fas fa-plus me-2"></i>Add Complaint
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Complainant</th>
+                                            <th>Issue</th>
+                                            <th>Category</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="complaintTableBody">
+                                        <tr>
+                                            <td>Rahul Patil</td>
+                                            <td>Broken Street Light</td>
+                                            <td>Infrastructure</td>
+                                            <td><span class="badge bg-warning">In Progress</span></td>
+                                            <td>15 Dec 2024</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                                                <button class="btn btn-sm btn-outline-success">Update</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Sneha Kulkarni</td>
+                                            <td>Water Supply Issue</td>
+                                            <td>Water</td>
+                                            <td><span class="badge bg-success">Resolved</span></td>
+                                            <td>10 Dec 2024</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1">View</button>
+                                                <button class="btn btn-sm btn-outline-success">Update</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events Page -->
+                <div id="events" class="page-content d-none">
+                    <div class="page-header mb-4">
+                        <h2 class="page-title">
+                            <i class="fas fa-calendar-alt me-2 text-info"></i>
+                            Events & Campaigns
+                        </h2>
+                        <p class="text-muted">View upcoming events and campaign activities</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="mb-0">Upcoming Events</h5>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button class="btn btn-info" id="viewAllEventsBtn">
+                                        <i class="fas fa-eye me-2"></i>View All Events
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Description</th>
+                                            <th>Date</th>
+                                            <th>Location</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eventTableBody">
+                                        <tr>
+                                            <td>Ward Meeting - Shivajinagar</td>
+                                            <td>Public meeting to discuss local issues</td>
+                                            <td>20 Dec 2024</td>
+                                            <td>Community Hall, Shivajinagar</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1">View Details</button>
+                                                <button class="btn btn-sm btn-outline-success">Attend</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Page -->
+                <div id="tasks" class="page-content d-none">
+                    <div class="page-header mb-4">
+                        <h2 class="page-title">
+                            <i class="fas fa-tasks me-2 text-primary"></i>
+                            My Tasks
+                        </h2>
+                        <p class="text-muted">Manage your assigned tasks and activities</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <h5 class="card-title mb-0">Task List</h5>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <select class="form-select" id="taskFilter">
+                                                <option value="">All Tasks</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="in_progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="task-list">
+                                        <div class="task-item p-3 border rounded mb-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-2">Contact voters in Shivajinagar area</h6>
+                                                    <p class="text-muted mb-2">Reach out to 50 voters in the assigned area and gather their feedback</p>
+                                                    <div class="d-flex gap-2 mb-2">
+                                                        <span class="badge bg-primary">High Priority</span>
+                                                        <span class="badge bg-info">Door-to-door</span>
+                                                    </div>
+                                                    <small class="text-muted">Due: Tomorrow, 2:00 PM</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-warning mb-2">In Progress</span>
+                                                    <div>
+                                                        <button class="btn btn-sm btn-outline-success me-1">Mark Complete</button>
+                                                        <button class="btn btn-sm btn-outline-primary">Update</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="task-item p-3 border rounded mb-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-2">Distribute campaign materials</h6>
+                                                    <p class="text-muted mb-2">Distribute flyers and brochures in Kothrud area</p>
+                                                    <div class="d-flex gap-2 mb-2">
+                                                        <span class="badge bg-secondary">Medium Priority</span>
+                                                        <span class="badge bg-info">Distribution</span>
+                                                    </div>
+                                                    <small class="text-muted">Due: Dec 20, 2024</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-primary mb-2">Pending</span>
+                                                    <div>
+                                                        <button class="btn btn-sm btn-outline-success me-1">Start Task</button>
+                                                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="task-item p-3 border rounded mb-3 bg-light">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-2">Attend community meeting</h6>
+                                                    <p class="text-muted mb-2">Participate in the monthly community meeting</p>
+                                                    <div class="d-flex gap-2 mb-2">
+                                                        <span class="badge bg-secondary">Low Priority</span>
+                                                        <span class="badge bg-info">Meeting</span>
+                                                    </div>
+                                                    <small class="text-muted">Completed: Dec 15, 2024</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-success mb-2">Completed</span>
+                                                    <div>
+                                                        <button class="btn btn-sm btn-outline-primary">View Report</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Task Statistics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="taskStatsChart" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/app.js"></script>
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user info
+            const role = localStorage.getItem('user_role');
+            document.getElementById('userRole').textContent = role || 'Volunteer';
+            fetchProfile();
+        async function fetchProfile() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const res = await fetch('/api/volunteers/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) return;
+                const prof = await res.json();
+                document.getElementById('userName').textContent = prof.name || 'Volunteer User';
+                const imgs = document.querySelectorAll('img[alt="Volunteer"], img[alt="Volunteer Logo"]');
+                imgs.forEach(img => { if (prof.avatar_url) img.src = prof.avatar_url; });
+            } catch (e) {}
+        }
+
+            // Initialize charts
+            initializeCharts();
+        });
+
+        function initializeCharts() {
+            // Task Progress Chart
+            const taskCtx = document.getElementById('taskChart').getContext('2d');
+            new Chart(taskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'In Progress', 'Pending'],
+                    datasets: [{
+                        data: [12, 2, 3],
+                        backgroundColor: ['#10b981', '#FFA726', '#6c757d'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Task Statistics Chart
+            const taskStatsCtx = document.getElementById('taskStatsChart').getContext('2d');
+            new Chart(taskStatsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['This Week', 'Last Week', 'This Month'],
+                    datasets: [{
+                        label: 'Tasks Completed',
+                        data: [5, 3, 12],
+                        backgroundColor: '#FF6B35',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Logout function
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        });
+    </script>
+</body>
+</html>

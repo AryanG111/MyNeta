@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voters - Smart Voter Connect</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Smart Voter Connect</a>
+      <div class="d-flex align-items-center gap-2">
+        <a href="/dashboard.html" class="btn btn-light btn-sm"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <button class="btn btn-outline-light btn-sm" id="logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4><i class="fa-solid fa-people-group"></i> Voters</h4>
+      <button class="btn btn-primary" id="openAdd"><i class="fa-solid fa-plus"></i> Add Voter</button>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-4">
+        <input id="search" class="form-control" placeholder="Search name/address/phone" />
+      </div>
+      <div class="col-md-3">
+        <input id="booth" class="form-control" placeholder="Filter by booth" />
+      </div>
+      <div class="col-md-3">
+        <select id="category" class="form-select">
+          <option value="">All categories</option>
+          <option value="supporter">Supporter</option>
+          <option value="neutral">Neutral</option>
+          <option value="opponent">Opponent</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button id="applyFilters" class="btn btn-secondary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Booth</th>
+            <th>Phone</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="addForm">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Voter</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2"><input class="form-control" placeholder="Name" id="name" required></div>
+            <div class="mb-2"><input class="form-control" placeholder="Address" id="address" required></div>
+            <div class="mb-2"><input class="form-control" placeholder="Booth" id="boothIn" required></div>
+            <div class="mb-2"><input class="form-control" placeholder="Phone" id="phone" required></div>
+            <div class="mb-2">
+              <select id="categoryIn" class="form-select" required>
+                <option value="supporter">Supporter</option>
+                <option value="neutral">Neutral</option>
+                <option value="opponent">Opponent</option>
+              </select>
+            </div>
+            <div id="msg" class="text-danger small"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login.html';
+    document.getElementById('logout').onclick = () => { localStorage.clear(); window.location.href = '/'; };
+
+    async function fetchVoters() {
+      const params = new URLSearchParams();
+      const search = document.getElementById('search').value.trim();
+      const booth = document.getElementById('booth').value.trim();
+      const category = document.getElementById('category').value;
+      if (search) params.set('search', search);
+      if (booth) params.set('booth', booth);
+      if (category) params.set('category', category);
+      const res = await fetch('/api/voters?' + params.toString(), { headers: { Authorization: 'Bearer ' + token } });
+      const rows = await res.json();
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.name}</td>
+          <td>${r.address}</td>
+          <td>${r.booth}</td>
+          <td>${r.phone}</td>
+          <td><span class="badge ${r.category==='supporter'?'bg-primary':r.category==='neutral'?'bg-success':'bg-danger'}">${r.category}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('applyFilters').onclick = fetchVoters;
+    fetchVoters();
+
+    const addModal = new bootstrap.Modal(document.getElementById('addModal'));
+    document.getElementById('openAdd').onclick = () => addModal.show();
+    document.getElementById('addForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        booth: document.getElementById('boothIn').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        category: document.getElementById('categoryIn').value,
+      };
+      const res = await fetch('/api/voters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) { addModal.hide(); fetchVoters(); }
+      else {
+        const err = await res.json().catch(() => ({}));
+        document.getElementById('msg').textContent = err.message || 'Failed to add voter';
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
