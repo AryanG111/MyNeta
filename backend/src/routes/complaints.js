@@ -3,12 +3,15 @@ const { Complaint, Voter } = require('../../models');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const router = express.Router();
 
+// Valid complaint statuses
+const VALID_STATUSES = ['pending', 'in_progress', 'resolved', 'flagged'];
+
 // Get all complaints with optional filtering
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
-    
+
     let whereClause = {};
     if (status) {
       whereClause.status = status;
@@ -47,7 +50,14 @@ router.get('/', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { voter_id, issue, status = 'pending' } = req.body;
-    
+
+    // Validate status if provided
+    if (status && !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({
+        message: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`
+      });
+    }
+
     const complaint = await Complaint.create({
       voter_id,
       issue,
@@ -66,7 +76,14 @@ router.patch('/:id/status', authenticateToken, authorizeRoles('admin'), async (r
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
+
+    // Validate status
+    if (!status || !VALID_STATUSES.includes(status)) {
+      return res.status(400).json({
+        message: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`
+      });
+    }
+
     const complaint = await Complaint.findByPk(id);
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });
@@ -84,7 +101,7 @@ router.patch('/:id/status', authenticateToken, authorizeRoles('admin'), async (r
 router.delete('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const complaint = await Complaint.findByPk(id);
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });

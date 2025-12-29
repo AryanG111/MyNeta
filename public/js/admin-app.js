@@ -297,7 +297,12 @@ class MyNetaAdmin {
     }
 
     getStatusBadgeClass(status) {
-        const classes = { pending: 'bg-warning', in_progress: 'bg-info', resolved: 'bg-success' };
+        const classes = {
+            pending: 'bg-warning',
+            in_progress: 'bg-info',
+            resolved: 'bg-success',
+            flagged: 'bg-danger'
+        };
         return classes[status] || 'bg-secondary';
     }
 }
