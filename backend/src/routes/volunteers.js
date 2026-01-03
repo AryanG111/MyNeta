@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { User } = require('../../models');
+const VolunteerRequest = require('../models/VolunteerRequest');
 
 // Get all volunteers (admin only)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
@@ -11,16 +12,13 @@ router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => 
         role: 'volunteer',
         is_approved: true
       },
-      attributes: ['id', 'name', 'email', 'mobile', 'area', 'last_login', 'createdAt'],
+      attributes: ['id', 'name', 'email', 'mobile', 'area', 'last_login', 'createdAt', 'points', 'level'],
       order: [['createdAt', 'DESC']]
     });
 
-    const pending = await User.findAll({
-      where: {
-        role: 'volunteer',
-        is_approved: false
-      },
-      attributes: ['id', 'name', 'email', 'mobile', 'area', 'createdAt'],
+    // Fetch pending from VolunteerRequest table (where new registrations go)
+    const pending = await VolunteerRequest.findAll({
+      where: { status: 'pending' },
       order: [['createdAt', 'DESC']]
     });
 
@@ -31,31 +29,56 @@ router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => 
   }
 });
 
-// Approve volunteer (admin only)
+// Approve volunteer (admin only) - creates user from VolunteerRequest
 router.post('/:id/approve', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { id } = req.params;
     const adminId = req.user.id;
 
-    const volunteer = await User.findOne({
-      where: {
-        id,
-        role: 'volunteer',
-        is_approved: false
-      }
+    // Find in VolunteerRequest table
+    const volunteerRequest = await VolunteerRequest.findOne({
+      where: { id, status: 'pending' }
     });
 
-    if (!volunteer) {
-      return res.status(404).json({ message: 'Volunteer not found or already approved' });
+    if (!volunteerRequest) {
+      return res.status(404).json({ message: 'Volunteer request not found or already processed' });
     }
 
-    await volunteer.update({
+    // Check if user with this email already exists
+    let user = await User.findOne({ where: { email: volunteerRequest.email } });
+
+    // Determine role from request_type (defaults to volunteer if not set)
+    const role = volunteerRequest.request_type || 'volunteer';
+
+    if (user) {
+      // User already exists - update their approval status and role
+      await user.update({ is_approved: true, role: role });
+      await volunteerRequest.update({ status: 'approved' });
+      return res.json({ message: `${role.charAt(0).toUpperCase() + role.slice(1)} approved successfully`, userId: user.id });
+    }
+
+    // Create user in Users table with correct role
+    user = await User.create({
+      name: volunteerRequest.name,
+      email: volunteerRequest.email,
+      mobile: volunteerRequest.phone,
+      password_hash: volunteerRequest.password_hash,
+      role: role,
       is_approved: true,
       approved_by: adminId,
-      approved_at: new Date()
+      approved_at: new Date(),
+      avatar_path: volunteerRequest.avatar_path,
+      points: 0,
+      level: 1,
+      tasks_completed: 0,
+      complaints_resolved: 0,
+      collaborations: 0
     });
 
-    res.json({ message: 'Volunteer approved successfully' });
+    // Update request status
+    await volunteerRequest.update({ status: 'approved' });
+
+    res.json({ message: `${role.charAt(0).toUpperCase() + role.slice(1)} approved successfully`, userId: user.id });
   } catch (error) {
     console.error('Error approving volunteer:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -67,20 +90,15 @@ router.post('/:id/reject', authenticateToken, authorizeRoles('admin'), async (re
   try {
     const { id } = req.params;
 
-    const volunteer = await User.findOne({
-      where: {
-        id,
-        role: 'volunteer',
-        is_approved: false
-      }
+    const volunteerRequest = await VolunteerRequest.findOne({
+      where: { id, status: 'pending' }
     });
 
-    if (!volunteer) {
-      return res.status(404).json({ message: 'Volunteer not found or already processed' });
+    if (!volunteerRequest) {
+      return res.status(404).json({ message: 'Volunteer request not found or already processed' });
     }
 
-    // Delete the volunteer record
-    await volunteer.destroy();
+    await volunteerRequest.update({ status: 'rejected' });
 
     res.json({ message: 'Volunteer application rejected' });
   } catch (error) {

@@ -8,12 +8,18 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load pages
+const LandingPage = lazy(() => import('@/pages/Landing').then(module => ({ default: module.LandingPage })));
 const LoginPage = lazy(() => import('@/pages/Login').then(module => ({ default: module.LoginPage })));
+const RegisterVolunteerPage = lazy(() => import('@/pages/RegisterVolunteer').then(module => ({ default: module.RegisterVolunteerPage })));
+const RegisterVoterPage = lazy(() => import('@/pages/RegisterVoter').then(module => ({ default: module.RegisterVoterPage })));
 const DashboardPage = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.DashboardPage })));
+const VolunteerDashboardPage = lazy(() => import('@/pages/VolunteerDashboard').then(module => ({ default: module.VolunteerDashboardPage })));
+const LeaderboardPage = lazy(() => import('@/pages/Leaderboard').then(module => ({ default: module.LeaderboardPage })));
 const VotersPage = lazy(() => import('@/pages/Voters').then(module => ({ default: module.VotersPage })));
 const VolunteersPage = lazy(() => import('@/pages/Volunteers').then(module => ({ default: module.VolunteersPage })));
 const ComplaintsPage = lazy(() => import('@/pages/Complaints').then(module => ({ default: module.ComplaintsPage })));
 const EventsPage = lazy(() => import('@/pages/Events').then(module => ({ default: module.EventsPage })));
+const AdminPage = lazy(() => import('@/pages/Admin').then(module => ({ default: module.AdminPage })));
 
 const queryClient = new QueryClient();
 
@@ -34,16 +40,23 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register-volunteer" element={<RegisterVolunteerPage />} />
+        <Route path="/register-voter" element={<RegisterVoterPage />} />
 
+        {/* Protected Dashboard Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/my-dashboard" element={<VolunteerDashboardPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/voters" element={<VotersPage />} />
             <Route path="/complaints" element={<ComplaintsPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/volunteers" element={<VolunteersPage />} />
-            <Route path="/admin" element={<div>Admin Page</div>} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
         </Route>
 
@@ -68,4 +81,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

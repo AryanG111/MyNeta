@@ -31,7 +31,7 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
             address: '',
             booth: '',
             phone: '',
-            category: 'A', // Default category
+            category: 'neutral', // Default category
         }
     });
 
@@ -44,7 +44,7 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
                 address: '',
                 booth: '',
                 phone: '',
-                category: 'A',
+                category: 'neutral',
             });
         }
     }, [initialData, reset]);
@@ -78,9 +78,9 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
                         {...register('category')}
                         className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                        <option value="A">Group A</option>
-                        <option value="B">Group B</option>
-                        <option value="C">Group C</option>
+                        <option value="supporter">Supporter</option>
+                        <option value="neutral">Neutral</option>
+                        <option value="opponent">Opponent</option>
                     </select>
                     {errors.category && <p className="text-red-500 text-xs">{errors.category.message}</p>}
                 </div>

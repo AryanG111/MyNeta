@@ -4,6 +4,7 @@ const { uploadAvatar } = require('../config/upload');
 const VolunteerRequest = require('../models/VolunteerRequest');
 const { User } = require('../../models');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { notifyAdminVolunteerRegistration } = require('../emailService');
 
 const router = express.Router();
 
@@ -14,7 +15,11 @@ router.post('/request', uploadAvatar.single('avatar'), async (req, res) => {
 		if (!name || !email || !phone || !password) return res.status(400).json({ message: 'Missing required fields' });
 		const password_hash = await bcrypt.hash(password, 10);
 		const avatar_path = req.file ? `uploads/avatars/${req.file.filename}` : null;
-		await VolunteerRequest.create({ name, email, phone, password_hash, message, avatar_path, status: 'pending' });
+		await VolunteerRequest.create({ name, email, phone, password_hash, message, avatar_path, status: 'pending', request_type: 'volunteer' });
+
+		// Send email notification to admin
+		notifyAdminVolunteerRegistration({ name, email, mobile: phone, message });
+
 		return res.status(201).json({ message: 'Volunteer request submitted – awaiting admin approval' });
 	} catch (e) {
 		return res.status(500).json({ message: 'Server error' });

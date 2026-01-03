@@ -1,7 +1,7 @@
 const express = require('express');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const VolunteerRequest = require('../models/VolunteerRequest');
-const { User } = require('../../models');
+const { User, Voter, Complaint, Event, sequelize } = require('../../models');
 
 const router = express.Router();
 
@@ -66,6 +66,61 @@ router.post('/reject-volunteer/:id', authenticateToken, authorizeRoles('admin'),
 	}
 });
 
+// Dashboard stats - optimized single endpoint for all dashboard metrics
+router.get('/dashboard-stats', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+	try {
+		const [voterCounts, complaintStats, totalEvents, totalVolunteers, pendingVolunteers] = await Promise.all([
+			// Voter counts by category
+			Voter.findAll({
+				attributes: [
+					'category',
+					[sequelize.fn('COUNT', sequelize.col('id')), 'count']
+				],
+				group: ['category'],
+				raw: true
+			}),
+			// Complaint counts by status
+			Complaint.findAll({
+				attributes: [
+					'status',
+					[sequelize.fn('COUNT', sequelize.col('id')), 'count']
+				],
+				group: ['status'],
+				raw: true
+			}),
+			// Total events
+			Event.count(),
+			// Total approved volunteers
+			User.count({ where: { role: 'volunteer', is_approved: true } }),
+			// Pending volunteer requests
+			User.count({ where: { role: 'volunteer', is_approved: false } })
+		]);
+
+		const totalVoters = voterCounts.reduce((sum, v) => sum + parseInt(v.count || 0), 0);
+		const totalComplaints = complaintStats.reduce((sum, c) => sum + parseInt(c.count || 0), 0);
+
+		res.json({
+			totalVoters,
+			totalComplaints,
+			totalEvents,
+			totalVolunteers,
+			pendingVolunteers,
+			voterCounts: voterCounts.map(v => ({
+				category: v.category,
+				count: parseInt(v.count)
+			})),
+			complaintStats: complaintStats.map(c => ({
+				status: c.status,
+				count: parseInt(c.count)
+			}))
+		});
+	} catch (error) {
+		console.error('Error fetching dashboard stats:', error);
+		res.status(500).json({ message: 'Internal server error' });
+	}
+});
+
 module.exports = router;
+
 
 

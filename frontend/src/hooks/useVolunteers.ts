@@ -40,8 +40,9 @@ export const useVolunteerRequests = () => {
     return useQuery({
         queryKey: ['volunteer-requests'],
         queryFn: async () => {
-            const { data } = await client.get<VolunteerRequest[]>('/admin/volunteer-requests');
-            return data;
+            const { data } = await client.get<VolunteersResponse>('/volunteers');
+            // Pending requests are returned as part of /volunteers endpoint
+            return data.pending as unknown as VolunteerRequest[];
         },
     });
 };
@@ -49,7 +50,7 @@ export const useVolunteerRequests = () => {
 export const useApproveRequest = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id: number) => client.post(`/admin/approve-volunteer/${id}`),
+        mutationFn: (id: number) => client.post(`/volunteers/${id}/approve`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['volunteer-requests'] });
             queryClient.invalidateQueries({ queryKey: ['volunteers'] });
@@ -60,9 +61,10 @@ export const useApproveRequest = () => {
 export const useRejectRequest = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id: number) => client.post(`/admin/reject-volunteer/${id}`),
+        mutationFn: (id: number) => client.post(`/volunteers/${id}/reject`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['volunteer-requests'] });
+            queryClient.invalidateQueries({ queryKey: ['volunteers'] });
         },
     });
 };

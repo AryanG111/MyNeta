@@ -5,9 +5,25 @@ export interface Complaint {
     id: number;
     issue: string;
     status: 'pending' | 'resolved' | 'in_progress';
+    priority?: 'low' | 'medium' | 'high';
     created_at: string;
     voter_name: string;
     voter_phone: string | null;
+    assigned_volunteer?: string | null;
+    assigned_volunteer_id?: number | null;
+    resolution_photo?: string | null;
+    resolution_notes?: string | null;
+    resolved_at?: string | null;
+    approved_by_admin?: boolean;
+}
+
+export interface ResolvedComplaint {
+    id: number;
+    issue: string;
+    resolution_notes: string;
+    resolution_photo: string | null;
+    resolved_at: string;
+    voter_name: string;
 }
 
 export const useComplaints = (status?: string) => {
@@ -16,6 +32,17 @@ export const useComplaints = (status?: string) => {
         queryFn: async () => {
             const params = status ? { status } : {};
             const { data } = await client.get<Complaint[]>('/complaints', { params });
+            return data;
+        },
+    });
+};
+
+// Fetch resolved complaints for public display
+export const useResolvedComplaints = () => {
+    return useQuery({
+        queryKey: ['resolved-complaints'],
+        queryFn: async () => {
+            const { data } = await client.get<ResolvedComplaint[]>('/complaints/resolved');
             return data;
         },
     });

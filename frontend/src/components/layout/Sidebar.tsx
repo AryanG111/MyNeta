@@ -7,7 +7,10 @@ import {
     Calendar,
     LogOut,
     Menu,
-    X
+    X,
+    Settings,
+    LayoutDashboard,
+    Trophy
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/utils/cn';
@@ -16,15 +19,28 @@ import { Button } from '@/components/ui/Button';
 
 export function Sidebar() {
     const { pathname } = useLocation();
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
 
+    const isAdmin = user?.role === 'admin';
+    const isVolunteer = user?.role === 'volunteer';
+
     const links = [
-        { href: '/', label: 'Dashboard', icon: BarChart3 },
-        { href: '/voters', label: 'Voters', icon: Users },
-        { href: '/volunteers', label: 'Volunteers', icon: UserPlus },
+        // Admin sees Dashboard overview, Volunteers see My Dashboard
+        ...(isAdmin ? [{ href: '/dashboard', label: 'Dashboard', icon: BarChart3 }] : []),
+        ...(isVolunteer ? [{ href: '/my-dashboard', label: 'My Dashboard', icon: LayoutDashboard }] : []),
+        // Everyone sees leaderboard
+        { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+        // Volunteers see only their complaints
         { href: '/complaints', label: 'Complaints', icon: AlertCircle },
+        // Events for everyone
         { href: '/events', label: 'Events', icon: Calendar },
+        // Admin-only pages
+        ...(isAdmin ? [
+            { href: '/voters', label: 'Voters', icon: Users },
+            { href: '/volunteers', label: 'Volunteers', icon: UserPlus },
+            { href: '/admin', label: 'Admin', icon: Settings },
+        ] : []),
     ];
 
     const SidebarContent = () => (
