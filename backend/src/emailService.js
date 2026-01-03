@@ -21,112 +21,104 @@ transporter.verify((error) => {
     }
 });
 
+// Base layout for all email templates
+const baseLayout = (title, content, color = '#f97316') => `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f3f4f6; padding: 20px;">
+        <div style="background-color: white; border-radius: 12px; overflow: hidden; shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="background: linear-gradient(135deg, ${color}, ${color}dd); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px; letter-spacing: 1px;">MyNeta</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0; font-size: 14px;">Campaign Management System</p>
+            </div>
+            
+            <div style="padding: 30px; color: #374151; line-height: 1.6;">
+                <h2 style="color: ${color}; margin-top: 0; font-size: 20px;">${title}</h2>
+                ${content}
+            </div>
+            
+            <div style="padding: 20px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                    This is an automated message from MyNeta Campaign System.<br>
+                    &copy; ${new Date().getFullYear()} MyNeta Team. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+`;
+
 // Email templates
 const templates = {
     newComplaint: (complaint, voterName) => ({
         subject: `🚨 New Complaint: ${complaint.issue.substring(0, 50)}...`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #f97316, #ea580c); padding: 20px; border-radius: 10px 10px 0 0;">
-                    <h2 style="color: white; margin: 0;">New Complaint Received</h2>
-                </div>
-                <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-                    <p><strong>From:</strong> ${voterName}</p>
-                    <p><strong>Priority:</strong> ${complaint.priority || 'Medium'}</p>
-                    <div style="background: #fef3cd; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p style="margin: 0;"><strong>Issue:</strong></p>
-                        <p style="margin: 10px 0 0 0;">${complaint.issue}</p>
-                    </div>
-                    <a href="http://localhost:5173/complaints" style="display: inline-block; background: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 15px;">
-                        View in Dashboard
-                    </a>
-                </div>
-                <div style="padding: 15px; background: #f9fafb; text-align: center; border-radius: 0 0 10px 10px;">
-                    <p style="margin: 0; color: #6b7280; font-size: 12px;">MyNeta Campaign Management</p>
-                </div>
+        html: baseLayout('New Complaint Received', `
+            <p>A new complaint has been filed by <strong>${voterName}</strong>.</p>
+            <div style="background-color: #fff7ed; border-left: 4px solid #f97316; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; color: #9a3412;">Issue Details:</p>
+                <p style="margin: 10px 0 0 0;">${complaint.issue}</p>
             </div>
-        `
+            <p><strong>Priority:</strong> <span style="text-transform: uppercase; font-weight: bold; color: ${complaint.priority === 'high' ? '#dc2626' : '#f97316'}">${complaint.priority || 'Medium'}</span></p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="${config.corsOrigin}/complaints" style="background-color: #f97316; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View in Dashboard</a>
+            </div>
+        `)
     }),
 
-    volunteerRegistration: (volunteer) => ({
-        subject: `👋 New Volunteer Registration: ${volunteer.name}`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 20px; border-radius: 10px 10px 0 0;">
-                    <h2 style="color: white; margin: 0;">New Volunteer Application</h2>
-                </div>
-                <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-                    <table style="width: 100%;">
-                        <tr><td style="padding: 8px 0; color: #6b7280;">Name:</td><td style="padding: 8px 0; font-weight: bold;">${volunteer.name}</td></tr>
-                        <tr><td style="padding: 8px 0; color: #6b7280;">Email:</td><td style="padding: 8px 0;">${volunteer.email}</td></tr>
-                        <tr><td style="padding: 8px 0; color: #6b7280;">Phone:</td><td style="padding: 8px 0;">${volunteer.mobile}</td></tr>
-                        ${volunteer.message ? `<tr><td style="padding: 8px 0; color: #6b7280;">Message:</td><td style="padding: 8px 0;">${volunteer.message}</td></tr>` : ''}
-                    </table>
-                    <a href="http://localhost:5173/admin" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 15px;">
-                        Review in Admin Panel
-                    </a>
-                </div>
-                <div style="padding: 15px; background: #f9fafb; text-align: center; border-radius: 0 0 10px 10px;">
-                    <p style="margin: 0; color: #6b7280; font-size: 12px;">MyNeta Campaign Management</p>
-                </div>
+    voterApproved: (voterName) => ({
+        subject: '🎉 Welcome to MyNeta! Your Voter Account is Active',
+        html: baseLayout('Account Approved!', `
+            <p>Hello <strong>${voterName}</strong>,</p>
+            <p>Fantastic news! Your voter registration has been reviewed and approved by the administrator.</p>
+            <p>You can now log in to the MyNeta platform to submit complaints, track issues in your area, and stay updated with campaign events.</p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="${config.corsOrigin}/login" style="background-color: #f97316; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Log In Now</a>
             </div>
-        `
+            <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">If you have any questions, feel free to reply to this email.</p>
+        `)
+    }),
+
+    volunteerApproved: (volunteerName) => ({
+        subject: '🚀 You are now an Official MyNeta Volunteer!',
+        html: baseLayout('Welcome to the Team!', `
+            <p>Hello <strong>${volunteerName}</strong>,</p>
+            <p>Congratulations! Your application to become a MyNeta volunteer has been <strong>approved</strong>.</p>
+            <p>We are thrilled to have you on board. You can now access your volunteer dashboard to view assigned tasks, help resolve voter complaints, and manage campaign activities.</p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="${config.corsOrigin}/login" style="background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Access Dashboard</a>
+            </div>
+        `, '#2563eb')
     }),
 
     complaintResolved: (complaint, voterEmail) => ({
         subject: `✅ Your Complaint Has Been Resolved`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 20px; border-radius: 10px 10px 0 0;">
-                    <h2 style="color: white; margin: 0;">Complaint Resolved!</h2>
-                </div>
-                <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-                    <p>Dear Voter,</p>
-                    <p>We're happy to inform you that your complaint has been addressed and resolved.</p>
-                    <div style="background: #d1fae5; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p style="margin: 0;"><strong>Your Complaint:</strong></p>
-                        <p style="margin: 10px 0 0 0;">${complaint.issue}</p>
-                    </div>
-                    <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p style="margin: 0;"><strong>Resolution:</strong></p>
-                        <p style="margin: 10px 0 0 0;">${complaint.resolution_notes || 'Issue has been addressed.'}</p>
-                    </div>
-                    ${complaint.resolution_photo ? `
-                        <p><strong>Proof Photo:</strong></p>
-                        <img src="http://localhost:5000${complaint.resolution_photo}" alt="Resolution proof" style="max-width: 100%; border-radius: 8px;">
-                    ` : ''}
-                    <p style="margin-top: 20px;">Thank you for bringing this to our attention. We value your feedback!</p>
-                </div>
-                <div style="padding: 15px; background: #f9fafb; text-align: center; border-radius: 0 0 10px 10px;">
-                    <p style="margin: 0; color: #6b7280; font-size: 12px;">MyNeta Campaign Management</p>
-                </div>
+        html: baseLayout('Complaint Resolved!', `
+            <p>Dear Citizen,</p>
+            <p>We are pleased to inform you that your complaint regarding <strong>"${complaint.issue.substring(0, 50)}..."</strong> has been resolved.</p>
+            <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; font-weight: bold; color: #166534;">Resolution Notes:</p>
+                <p style="margin: 10px 0 0 0;">${complaint.resolution_notes || 'The issue has been successfully addressed by our team.'}</p>
             </div>
-        `
+            ${complaint.resolution_photo ? `
+                <p><strong>Proof of Resolution:</strong></p>
+                <div style="border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+                    <img src="http://localhost:5000${complaint.resolution_photo}" alt="Resolution proof" style="max-width: 100%; display: block;">
+                </div>
+            ` : ''}
+            <p style="margin-top: 20px;">Thank you for your patience and for helping us make our community better.</p>
+        `, '#10b981')
     }),
 
     taskAssigned: (task, volunteerEmail) => ({
-        subject: `📋 New Task Assigned: ${task.title}`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 20px; border-radius: 10px 10px 0 0;">
-                    <h2 style="color: white; margin: 0;">New Task Assigned</h2>
-                </div>
-                <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
-                    <h3 style="margin-top: 0;">${task.title}</h3>
-                    <p>${task.description || 'No description provided.'}</p>
-                    <table style="width: 100%; margin: 15px 0;">
-                        <tr><td style="padding: 8px 0; color: #6b7280;">Priority:</td><td style="padding: 8px 0; font-weight: bold;">${task.priority}</td></tr>
-                        ${task.due_date ? `<tr><td style="padding: 8px 0; color: #6b7280;">Due Date:</td><td style="padding: 8px 0;">${new Date(task.due_date).toLocaleDateString()}</td></tr>` : ''}
-                    </table>
-                    <a href="http://localhost:5173/my-dashboard" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 15px;">
-                        View My Tasks
-                    </a>
-                </div>
-                <div style="padding: 15px; background: #f9fafb; text-align: center; border-radius: 0 0 10px 10px;">
-                    <p style="margin: 0; color: #6b7280; font-size: 12px;">MyNeta Campaign Management</p>
-                </div>
+        subject: `📋 New Task: ${task.title}`,
+        html: baseLayout('New Task Assigned', `
+            <p>You have been assigned a new task: <strong>${task.title}</strong></p>
+            <p style="color: #6b7280;">${task.description || 'No additional details provided.'}</p>
+            <div style="background-color: #f0f9ff; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Priority:</strong> ${task.priority.toUpperCase()}</p>
+                ${task.due_date ? `<p style="margin: 10px 0 0 0;"><strong>Due Date:</strong> ${new Date(task.due_date).toLocaleDateString()}</p>` : ''}
             </div>
-        `
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="${config.corsOrigin}/my-dashboard" style="background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Task Details</a>
+            </div>
+        `, '#2563eb')
     })
 };
 
@@ -164,7 +156,20 @@ const notifyAdminNewComplaint = async (complaint, voterName) => {
 const notifyAdminVolunteerRegistration = async (volunteer) => {
     const adminEmail = config.smtp.adminEmail || config.smtp.user;
     if (!adminEmail) return;
-    return sendEmail(adminEmail, templates.volunteerRegistration(volunteer));
+    return sendEmail(adminEmail, {
+        subject: `👋 New Volunteer Application: ${volunteer.name}`,
+        html: baseLayout('New Volunteer Registration', `
+            <p>A new volunteer application is awaiting review.</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr><td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Name</td><td style="padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">${volunteer.name}</td></tr>
+                <tr><td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Email</td><td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${volunteer.email}</td></tr>
+                <tr><td style="padding: 10px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Phone</td><td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${volunteer.mobile}</td></tr>
+            </table>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="${config.corsOrigin}/admin" style="background-color: #10b981; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Go to Admin Panel</a>
+            </div>
+        `, '#10b981')
+    });
 };
 
 const notifyVoterComplaintResolved = async (complaint, voterEmail) => {
@@ -177,11 +182,23 @@ const notifyVolunteerTaskAssigned = async (task, volunteerEmail) => {
     return sendEmail(volunteerEmail, templates.taskAssigned(task));
 };
 
+const notifyVoterApproved = async (voterName, voterEmail) => {
+    if (!voterEmail) return;
+    return sendEmail(voterEmail, templates.voterApproved(voterName));
+};
+
+const notifyVolunteerApproved = async (volunteerName, volunteerEmail) => {
+    if (!volunteerEmail) return;
+    return sendEmail(volunteerEmail, templates.volunteerApproved(volunteerName));
+};
+
 module.exports = {
     sendEmail,
     templates,
     notifyAdminNewComplaint,
     notifyAdminVolunteerRegistration,
     notifyVoterComplaintResolved,
-    notifyVolunteerTaskAssigned
+    notifyVolunteerTaskAssigned,
+    notifyVoterApproved,
+    notifyVolunteerApproved
 };

@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const VoterRequest = require('../models/VoterRequest');
 const { User, Voter } = require('../../models');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { notifyVoterApproved } = require('../emailService');
 
 const router = express.Router();
 
@@ -95,6 +96,9 @@ router.post('/:id/approve', authenticateToken, authorizeRoles('admin'), async (r
         });
 
         await voterRequest.update({ status: 'approved' });
+
+        // Notify voter
+        notifyVoterApproved(voterRequest.name, voterRequest.email);
 
         res.json({ message: 'Voter approved successfully', userId: user.id });
     } catch (error) {

@@ -32,8 +32,8 @@ const registerVoterSchema = Joi.object({
 
 const loginSchema = Joi.object({
   body: Joi.object({
-    identifier: Joi.alternatives().try(Joi.string().email(), Joi.string().pattern(/^[0-9]{10}$/)).required(),
-    password: Joi.string().min(8).max(128).required(),
+    identifier: Joi.string().required(),
+    password: Joi.string().min(6).max(128).required(),
     role: Joi.string().valid('admin', 'volunteer', 'voter').optional()
   })
 });
@@ -54,7 +54,7 @@ async function register(req, res) {
     // Create user with approval status
     const userData = {
       name,
-      email,
+      email: email.toLowerCase(),
       password_hash,
       mobile,
       role,
@@ -86,15 +86,23 @@ async function register(req, res) {
 async function login(req, res) {
   try {
     const { identifier, password } = req.body;
-    const where = identifier?.includes('@') ? { email: identifier } : { mobile: identifier };
+
+    // Normalize identifier
+    const id = identifier?.trim();
+    const where = id?.includes('@') ? { email: id.toLowerCase() } : { mobile: id };
+
+    console.log(`[AUTH] Login attempt for identifier: ${id}, Resolved where:`, where);
+
     const user = await User.findOne({ where });
 
     if (!user) {
+      console.log(`[AUTH] User not found for: ${id}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) {
+      console.log(`[AUTH] Password mismatch for: ${id}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -153,7 +161,7 @@ async function registerVoter(req, res) {
 
     const user = await User.create({
       name,
-      email,
+      email: email.toLowerCase(),
       password_hash,
       mobile: phone,
       role: 'voter',
@@ -164,7 +172,7 @@ async function registerVoter(req, res) {
     // Create a record in Voters table so they can register complaints
     await Voter.create({
       name,
-      email,
+      email: email.toLowerCase(),
       phone,
       address,
       booth: req.body.area || '',

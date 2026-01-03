@@ -15,7 +15,7 @@ app.use(helmet({
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com"],
       fontSrc: ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "images.unsplash.com", "blob:"],
+      imgSrc: ["'self'", "data:", "images.unsplash.com", "blob:", "http://localhost:5000"],
       connectSrc: ["'self'"],
     }
   }
