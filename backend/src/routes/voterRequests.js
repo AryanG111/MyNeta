@@ -97,8 +97,14 @@ router.post('/:id/approve', authenticateToken, authorizeRoles('admin'), async (r
 
         await voterRequest.update({ status: 'approved' });
 
-        // Notify voter
-        notifyVoterApproved(voterRequest.name, voterRequest.email);
+        // Notify voter via email
+        try {
+            console.log(`[EMAIL] Sending approval email to voter: ${voterRequest.email}`);
+            await notifyVoterApproved(voterRequest.name, voterRequest.email);
+            console.log(`[EMAIL] Approval email sent successfully to: ${voterRequest.email}`);
+        } catch (emailErr) {
+            console.error(`[EMAIL] Failed to send approval email to ${voterRequest.email}:`, emailErr.message);
+        }
 
         res.json({ message: 'Voter approved successfully', userId: user.id });
     } catch (error) {

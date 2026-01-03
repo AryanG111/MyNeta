@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const { User } = require('../../models');
 const VolunteerRequest = require('../models/VolunteerRequest');
+const { notifyVolunteerApproved, notifyVoterApproved } = require('../emailService');
 
 // Get all volunteers (admin only)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
@@ -77,6 +78,19 @@ router.post('/:id/approve', authenticateToken, authorizeRoles('admin'), async (r
 
     // Update request status
     await volunteerRequest.update({ status: 'approved' });
+
+    // Send approval email notification
+    try {
+      console.log(`[EMAIL] Sending approval email to ${role}: ${volunteerRequest.email}`);
+      if (role === 'volunteer') {
+        await notifyVolunteerApproved(volunteerRequest.name, volunteerRequest.email);
+      } else {
+        await notifyVoterApproved(volunteerRequest.name, volunteerRequest.email);
+      }
+      console.log(`[EMAIL] Approval email sent successfully to: ${volunteerRequest.email}`);
+    } catch (emailErr) {
+      console.error(`[EMAIL] Failed to send approval email to ${volunteerRequest.email}:`, emailErr.message);
+    }
 
     res.json({ message: `${role.charAt(0).toUpperCase() + role.slice(1)} approved successfully`, userId: user.id });
   } catch (error) {

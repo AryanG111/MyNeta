@@ -58,8 +58,14 @@ router.post('/admin/approve-volunteer/:id', authenticateToken, authorizeRoles('a
 		});
 		await reqRow.update({ status: 'approved' });
 
-		// Notify volunteer
-		notifyVolunteerApproved(reqRow.name, reqRow.email);
+		// Notify volunteer via email
+		try {
+			console.log(`[EMAIL] Sending approval email to volunteer: ${reqRow.email}`);
+			await notifyVolunteerApproved(reqRow.name, reqRow.email);
+			console.log(`[EMAIL] Approval email sent successfully to: ${reqRow.email}`);
+		} catch (emailErr) {
+			console.error(`[EMAIL] Failed to send approval email to ${reqRow.email}:`, emailErr.message);
+		}
 
 		return res.json({ message: 'Volunteer approved', userId: user.id });
 	} catch (e) {
