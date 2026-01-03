@@ -14,6 +14,8 @@ module.exports = (sequelize, DataTypes) => {
       Voter.hasMany(models.Complaint, { foreignKey: 'voter_id', as: 'complaints' });
       // Voter has many login records
       Voter.hasMany(models.Login, { foreignKey: 'voter_id', as: 'logins' });
+      // Voter belongs to a User
+      Voter.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
     }
   }
   Voter.init({
@@ -26,8 +28,17 @@ module.exports = (sequelize, DataTypes) => {
     city: DataTypes.STRING,
     section: DataTypes.STRING,
     part_no: DataTypes.STRING,
+    ward_no: DataTypes.STRING,
     notes: DataTypes.TEXT,
     phone: DataTypes.STRING,
+    email: DataTypes.STRING,
+    user_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
+    },
     category: {
       type: DataTypes.ENUM('supporter', 'neutral', 'opponent'),
       defaultValue: 'neutral'

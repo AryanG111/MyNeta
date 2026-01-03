@@ -14,6 +14,7 @@ const RegisterVolunteerPage = lazy(() => import('@/pages/RegisterVolunteer').the
 const RegisterVoterPage = lazy(() => import('@/pages/RegisterVoter').then(module => ({ default: module.RegisterVoterPage })));
 const DashboardPage = lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.DashboardPage })));
 const VolunteerDashboardPage = lazy(() => import('@/pages/VolunteerDashboard').then(module => ({ default: module.VolunteerDashboardPage })));
+const VoterDashboardPage = lazy(() => import('@/pages/VoterDashboard').then(module => ({ default: module.VoterDashboardPage })));
 const LeaderboardPage = lazy(() => import('@/pages/Leaderboard').then(module => ({ default: module.LeaderboardPage })));
 const VotersPage = lazy(() => import('@/pages/Voters').then(module => ({ default: module.VotersPage })));
 const VolunteersPage = lazy(() => import('@/pages/Volunteers').then(module => ({ default: module.VolunteersPage })));
@@ -51,6 +52,7 @@ function AppRoutes() {
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/my-dashboard" element={<VolunteerDashboardPage />} />
+            <Route path="/voter-dashboard" element={<VoterDashboardPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/voters" element={<VotersPage />} />
             <Route path="/complaints" element={<ComplaintsPage />} />

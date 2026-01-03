@@ -10,6 +10,7 @@ import {
     HandHelping
 } from 'lucide-react';
 import { useMyTasks, useUpdateTaskStatus, useRequestCollaboration, type Task } from '@/hooks/useTasks';
+import { useComplaints, type Complaint } from '@/hooks/useComplaints';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -19,13 +20,22 @@ import { useToast } from '@/context/ToastContext';
 export function VolunteerDashboardPage() {
     const { user } = useAuth();
     const { addToast } = useToast();
-    const { data: tasks, isLoading } = useMyTasks();
+    const { data: tasks, isLoading: tasksLoading } = useMyTasks();
+    const { data: complaints, isLoading: complaintsLoading } = useComplaints(undefined, user?.id);
+    const isLoading = tasksLoading || complaintsLoading;
+
     const updateStatusMutation = useUpdateTaskStatus();
     const requestCollabMutation = useRequestCollaboration();
 
     const pendingTasks = tasks?.filter((t: Task) => t.status === 'pending') || [];
     const inProgressTasks = tasks?.filter((t: Task) => t.status === 'in_progress') || [];
     const completedTasks = tasks?.filter((t: Task) => t.status === 'completed') || [];
+
+    const pendingComplaints = complaints?.filter((c: Complaint) => c.status === 'pending') || [];
+    const inProgressComplaints = complaints?.filter((c: Complaint) => c.status === 'in_progress') || [];
+    const resolvedComplaints = complaints?.filter((c: Complaint) => c.status === 'resolved') || [];
+
+    const activeComplaints = [...pendingComplaints, ...inProgressComplaints];
 
     const handleStartTask = (taskId: number) => {
         updateStatusMutation.mutate(
@@ -144,8 +154,8 @@ export function VolunteerDashboardPage() {
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-orange-600 font-medium">Total Tasks</p>
-                                <p className="text-3xl font-bold text-orange-700">{tasks?.length || 0}</p>
+                                <p className="text-sm text-orange-600 font-medium">Total Items</p>
+                                <p className="text-3xl font-bold text-orange-700">{(tasks?.length || 0) + (complaints?.length || 0)}</p>
                             </div>
                             <ClipboardList className="h-10 w-10 text-orange-500 opacity-80" />
                         </div>
@@ -157,7 +167,7 @@ export function VolunteerDashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-yellow-600 font-medium">Pending</p>
-                                <p className="text-3xl font-bold text-yellow-700">{pendingTasks.length}</p>
+                                <p className="text-3xl font-bold text-yellow-700">{pendingTasks.length + pendingComplaints.length}</p>
                             </div>
                             <Clock className="h-10 w-10 text-yellow-500 opacity-80" />
                         </div>
@@ -169,7 +179,7 @@ export function VolunteerDashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-blue-600 font-medium">In Progress</p>
-                                <p className="text-3xl font-bold text-blue-700">{inProgressTasks.length}</p>
+                                <p className="text-3xl font-bold text-blue-700">{inProgressTasks.length + inProgressComplaints.length}</p>
                             </div>
                             <AlertCircle className="h-10 w-10 text-blue-500 opacity-80" />
                         </div>
@@ -181,13 +191,46 @@ export function VolunteerDashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-green-600 font-medium">Completed</p>
-                                <p className="text-3xl font-bold text-green-700">{completedTasks.length}</p>
+                                <p className="text-3xl font-bold text-green-700">{completedTasks.length + resolvedComplaints.length}</p>
                             </div>
                             <CheckCircle2 className="h-10 w-10 text-green-500 opacity-80" />
                         </div>
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Assigned Complaints (New Section) */}
+            {activeComplaints.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-indigo-600">
+                            <HandHelping className="h-5 w-5" />
+                            Assigned Complaints
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {activeComplaints.map((complaint: Complaint) => (
+                            <div key={complaint.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <div className="flex justify-between items-start mb-2">
+                                    <Badge variant={complaint.status === 'in_progress' ? 'info' : 'warning'}>
+                                        {complaint.status.replace('_', ' ')}
+                                    </Badge>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getPriorityColor(complaint.priority || 'medium')}`}>
+                                        {complaint.priority}
+                                    </span>
+                                </div>
+                                <h4 className="font-medium text-gray-900 mb-1 line-clamp-2">{complaint.issue}</h4>
+                                <p className="text-xs text-gray-500">From: {complaint.voter_name}</p>
+                                <div className="mt-3">
+                                    <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = '/complaints'}>
+                                        View in Complaints
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Task Sections */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -264,7 +307,7 @@ export function VolunteerDashboardPage() {
                             <p className="text-sm text-gray-500">Completion Rate</p>
                         </div>
                         <div className="text-center p-4 bg-gray-50 rounded-xl">
-                            <p className="text-3xl font-bold text-primary">0</p>
+                            <p className="text-3xl font-bold text-primary">{resolvedComplaints.length}</p>
                             <p className="text-sm text-gray-500">Complaints Resolved</p>
                         </div>
                         <div className="text-center p-4 bg-gray-50 rounded-xl">

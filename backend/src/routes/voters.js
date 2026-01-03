@@ -1,6 +1,7 @@
 const express = require('express');
-const { Voter, sequelize } = require('../../models');
+const { Voter, User, sequelize } = require('../../models');
 const { Op } = require('sequelize');
+const bcrypt = require('bcrypt');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const router = express.Router();
 
@@ -9,17 +10,17 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const { page = 1, limit = 20, category, booth, search } = req.query;
     const offset = (page - 1) * limit;
-    
+
     let whereClause = {};
-    
+
     if (category) {
       whereClause.category = category;
     }
-    
+
     if (booth) {
       whereClause.booth = booth;
     }
-    
+
     if (search) {
       whereClause[Op.or] = [
         { name: { [Op.like]: `%${search}%` } },
@@ -30,6 +31,11 @@ router.get('/', authenticateToken, async (req, res) => {
 
     const voters = await Voter.findAndCountAll({
       where: whereClause,
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['email', 'is_approved', 'last_login']
+      }],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['createdAt', 'DESC']]
@@ -66,21 +72,52 @@ router.get('/counts', authenticateToken, async (req, res) => {
   }
 });
 
-// Create new voter
+// Create new voter (Proper Signup Procedure)
 router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+  const transaction = await sequelize.transaction();
   try {
-    const { name, address, booth, phone, category } = req.body;
-    
+    const { name, address, booth, phone, category, email, password } = req.body;
+    const adminId = req.user.id;
+
+    let userId = null;
+
+    if (email && password) {
+      // Check if user already exists
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        await transaction.rollback();
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      const user = await User.create({
+        name,
+        email,
+        mobile: phone,
+        password_hash: hash,
+        role: 'voter',
+        is_approved: true, // Admin-created users are auto-approved
+        approved_by: adminId,
+        approved_at: new Date(),
+        area: booth
+      }, { transaction });
+      userId = user.id;
+    }
+
     const voter = await Voter.create({
       name,
       address,
       booth,
       phone,
-      category
-    });
+      category,
+      email: email || null,
+      user_id: userId
+    }, { transaction });
 
+    await transaction.commit();
     res.status(201).json(voter);
   } catch (error) {
+    await transaction.rollback();
     console.error('Error creating voter:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -90,9 +127,9 @@ router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) =>
 router.put('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, address, booth, phone, category } = req.body;
-    
-    const voter = await Voter.findByPk(id);
+    const { name, address, booth, phone, category, email } = req.body;
+
+    const voter = await Voter.findByPk(id, { include: ['user'] });
     if (!voter) {
       return res.status(404).json({ message: 'Voter not found' });
     }
@@ -102,8 +139,18 @@ router.put('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) 
       address,
       booth,
       phone,
-      category
+      category,
+      email
     });
+
+    if (voter.user) {
+      await voter.user.update({
+        name,
+        email,
+        mobile: phone,
+        area: booth
+      });
+    }
 
     res.json(voter);
   } catch (error) {
@@ -114,20 +161,32 @@ router.put('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) 
 
 // Delete voter
 router.delete('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+  const transaction = await sequelize.transaction();
   try {
     const { id } = req.params;
-    
+
     const voter = await Voter.findByPk(id);
     if (!voter) {
+      await transaction.rollback();
       return res.status(404).json({ message: 'Voter not found' });
     }
 
-    await voter.destroy();
-    res.json({ message: 'Voter deleted successfully' });
+    const userId = voter.user_id;
+
+    await voter.destroy({ transaction });
+
+    if (userId) {
+      await User.destroy({ where: { id: userId }, transaction });
+    }
+
+    await transaction.commit();
+    res.json({ message: 'Voter and associated user deleted successfully' });
   } catch (error) {
+    await transaction.rollback();
     console.error('Error deleting voter:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 module.exports = router;
+

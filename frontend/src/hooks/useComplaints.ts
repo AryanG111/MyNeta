@@ -26,11 +26,14 @@ export interface ResolvedComplaint {
     voter_name: string;
 }
 
-export const useComplaints = (status?: string) => {
+export const useComplaints = (status?: string, volunteer_id?: number) => {
     return useQuery({
-        queryKey: ['complaints', status],
+        queryKey: ['complaints', status, volunteer_id],
         queryFn: async () => {
-            const params = status ? { status } : {};
+            const params: any = {};
+            if (status) params.status = status;
+            if (volunteer_id) params.volunteer_id = volunteer_id;
+
             const { data } = await client.get<Complaint[]>('/complaints', { params });
             return data;
         },

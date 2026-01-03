@@ -8,6 +8,13 @@ export interface Voter {
     booth: string;
     phone: string;
     category: string;
+    ward_no?: string;
+    email?: string;
+    user?: {
+        email: string;
+        is_approved: boolean;
+        last_login: string;
+    };
     createdAt?: string;
 }
 

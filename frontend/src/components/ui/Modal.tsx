@@ -9,14 +9,15 @@ interface ModalProps {
     title: string;
     children: React.ReactNode;
     description?: string;
+    className?: string;
 }
 
-export function Modal({ isOpen, onClose, title, description, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, description, children, className }: ModalProps) {
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-lg animate-in zoom-in-95 duration-200">
+            <div className={`relative w-full max-w-lg animate-in zoom-in-95 duration-200 ${className || ''}`}>
                 <Card className="border-none shadow-xl max-h-[90vh] flex flex-col">
                     <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                         <div className="space-y-1">

@@ -8,6 +8,7 @@ const VoterRequest = sequelize.define('VoterRequest', {
     password_hash: { type: DataTypes.STRING, allowNull: false },
     address: { type: DataTypes.TEXT },
     area: { type: DataTypes.STRING },
+    ward_no: { type: DataTypes.STRING },
     voter_id: { type: DataTypes.STRING },
     message: { type: DataTypes.TEXT },
     status: { type: DataTypes.ENUM('pending', 'approved', 'rejected'), defaultValue: 'pending' }

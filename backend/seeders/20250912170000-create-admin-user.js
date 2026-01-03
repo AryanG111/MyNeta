@@ -7,11 +7,11 @@ module.exports = {
     // Create admin user
     const adminPassword = await bcrypt.hash('Vedish0101', 10);
     const volunteerPassword = await bcrypt.hash('Sahil@6055', 10);
-    
+
     await queryInterface.bulkInsert('Users', [
       {
         id: 1,
-        name: 'Subhash Dhore',
+        name: 'Subhash',
         email: 'subhash@myneta.app',
         password_hash: adminPassword,
         role: 'admin',

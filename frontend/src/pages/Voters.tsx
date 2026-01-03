@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Loader2, ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Loader2, ChevronLeft, ChevronRight, Check, X, Mail } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useVoters, useCreateVoter, useUpdateVoter, useDeleteVoter, type Voter } from '@/hooks/useVoters';
 import { Button } from '@/components/ui/Button';
@@ -38,7 +38,7 @@ export function VotersPage() {
     });
 
     // Fetch pending voter requests
-    const { data: voterRequestsData, isLoading: requestsLoading } = useQuery({
+    const { data: voterRequestsData } = useQuery({
         queryKey: ['voter-requests'],
         queryFn: async () => {
             const { data } = await client.get<{ pending: VoterRequest[] }>('/voter-requests');
@@ -197,25 +197,39 @@ export function VotersPage() {
                                     <thead className="[&_tr]:border-b">
                                         <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Name</th>
+                                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Email</th>
                                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Phone</th>
                                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Booth</th>
+                                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Ward</th>
                                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Category</th>
-                                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Address</th>
                                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="[&_tr:last-child]:border-0">
                                         {data?.data.length === 0 ? (
                                             <tr>
-                                                <td colSpan={6} className="h-24 text-center">
+                                                <td colSpan={7} className="h-24 text-center">
                                                     No voters found.
                                                 </td>
                                             </tr>
                                         ) : (data?.data.map((voter) => (
                                             <tr key={voter.id} className="border-b transition-colors hover:bg-slate-50">
                                                 <td className="p-4 align-middle font-medium">{voter.name}</td>
+                                                <td className="p-4 align-middle">
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail className="h-3 w-3 text-slate-400" />
+                                                        {voter.email || voter.user?.email || (
+                                                            <span className="text-slate-400 italic text-xs">No account</span>
+                                                        )}
+                                                    </div>
+                                                </td>
                                                 <td className="p-4 align-middle">{voter.phone}</td>
-                                                <td className="p-4 align-middle">{voter.booth}</td>
+                                                <td className="p-4 align-middle">{voter.booth || '-'}</td>
+                                                <td className="p-4 align-middle">
+                                                    {voter.ward_no ? (
+                                                        <span className="font-semibold text-slate-700">Ward {voter.ward_no}</span>
+                                                    ) : '-'}
+                                                </td>
                                                 <td className="p-4 align-middle">
                                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${voter.category === 'supporter' ? 'bg-green-50 text-green-700 ring-1 ring-green-600/20' :
                                                         voter.category === 'opponent' ? 'bg-red-50 text-red-700 ring-1 ring-red-600/20' :
@@ -225,7 +239,6 @@ export function VotersPage() {
                                                         {voter.category || 'Unknown'}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 align-middle max-w-[200px] truncate" title={voter.address}>{voter.address}</td>
                                                 <td className="p-4 align-middle text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <Button variant="ghost" size="sm" onClick={() => handleOpenEdit(voter)}>

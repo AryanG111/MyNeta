@@ -24,14 +24,17 @@ export function Sidebar() {
 
     const isAdmin = user?.role === 'admin';
     const isVolunteer = user?.role === 'volunteer';
+    const isVoter = user?.role === 'voter';
 
     const links = [
-        // Admin sees Dashboard overview, Volunteers see My Dashboard
+        // Admin sees Dashboard overview, Volunteers/Voters see their specific Dashboards
         ...(isAdmin ? [{ href: '/dashboard', label: 'Dashboard', icon: BarChart3 }] : []),
         ...(isVolunteer ? [{ href: '/my-dashboard', label: 'My Dashboard', icon: LayoutDashboard }] : []),
+        ...(isVoter ? [{ href: '/voter-dashboard', label: 'My Dashboard', icon: LayoutDashboard }] : []),
         // Everyone sees leaderboard
         { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-        // Volunteers see only their complaints
+        // Volunteers/Admin see all complaints, Voters see... actually voters can see all too or just theirs? 
+        // For now everyone sees the list.
         { href: '/complaints', label: 'Complaints', icon: AlertCircle },
         // Events for everyone
         { href: '/events', label: 'Events', icon: Calendar },

@@ -37,12 +37,15 @@ const VALID_STATUSES = ['pending', 'in_progress', 'resolved'];
 // Get all complaints with optional filtering
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status, volunteer_id, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
     let whereClause = {};
     if (status) {
       whereClause.status = status;
+    }
+    if (volunteer_id) {
+      whereClause.assigned_volunteer = volunteer_id;
     }
 
     const complaints = await Complaint.findAndCountAll({
@@ -109,7 +112,34 @@ router.get('/resolved', async (req, res) => {
 // Create new complaint
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { voter_id, issue, priority = 'medium' } = req.body;
+    let { voter_id, issue, priority = 'medium' } = req.body;
+
+    // If user is a voter, find their voter record ID
+    if (req.user.role === 'voter') {
+      let voter = await Voter.findOne({ where: { user_id: req.user.id } });
+
+      if (!voter) {
+        // Double check user exists to avoid FK error (orphaned JWT)
+        const userExists = await User.findByPk(req.user.id);
+        if (!userExists) {
+          return res.status(401).json({ message: 'Session expired or user not found. Please log in again.' });
+        }
+
+        // Fallback: Create a voter profile if it doesn't exist but user has 'voter' role
+        voter = await Voter.create({
+          name: req.user.name,
+          email: req.user.email,
+          user_id: req.user.id,
+          category: 'neutral',
+          address: 'Created via complaint fallback'
+        });
+      }
+      voter_id = voter.id;
+    }
+
+    if (!voter_id || !issue) {
+      return res.status(400).json({ message: 'Missing voter ID or issue description' });
+    }
 
     const complaint = await Complaint.create({
       voter_id,
@@ -117,7 +147,6 @@ router.post('/', authenticateToken, async (req, res) => {
       priority,
       status: 'pending'
     });
-
     // Get voter name for email
     const voter = await Voter.findByPk(voter_id);
     const voterName = voter?.name || 'Unknown Voter';

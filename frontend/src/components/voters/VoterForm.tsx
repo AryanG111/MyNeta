@@ -12,6 +12,8 @@ const voterSchema = z.object({
     booth: z.string().min(1, "Booth number is required"),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
     category: z.string().min(1, "Category is required"),
+    email: z.string().email("Invalid email").optional().or(z.literal('')),
+    password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
 });
 
 type VoterFormData = z.infer<typeof voterSchema>;
@@ -31,13 +33,19 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
             address: '',
             booth: '',
             phone: '',
-            category: 'neutral', // Default category
+            category: 'neutral',
+            email: '',
+            password: '',
         }
     });
 
     useEffect(() => {
         if (initialData) {
-            reset(initialData);
+            reset({
+                ...initialData,
+                email: (initialData as any).email || (initialData as any).user?.email || '',
+                password: '',
+            });
         } else {
             reset({
                 name: '',
@@ -45,6 +53,8 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
                 booth: '',
                 phone: '',
                 category: 'neutral',
+                email: '',
+                password: '',
             });
         }
     }, [initialData, reset]);
@@ -58,12 +68,30 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
                 placeholder="Enter voter name"
             />
 
-            <FormField
-                label="Phone Number"
-                {...register('phone')}
-                error={errors.phone?.message}
-                placeholder="e.g. 9876543210"
-            />
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                    label="Phone Number"
+                    {...register('phone')}
+                    error={errors.phone?.message}
+                    placeholder="e.g. 9876543210"
+                />
+                <FormField
+                    label="Email (Optional for Login)"
+                    {...register('email')}
+                    error={errors.email?.message}
+                    placeholder="voter@email.com"
+                />
+            </div>
+
+            {!initialData && (
+                <FormField
+                    label="Password (for New Account)"
+                    type="password"
+                    {...register('password')}
+                    error={errors.password?.message}
+                    placeholder="Minimum 6 characters"
+                />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -98,7 +126,7 @@ export function VoterForm({ initialData, onSubmit, onCancel, isLoading }: VoterF
                     Cancel
                 </Button>
                 <Button type="submit" isLoading={isLoading}>
-                    {initialData ? 'Update Voter' : 'Add Voter'}
+                    {initialData ? 'Update Voter' : 'Add Voter & Create Account'}
                 </Button>
             </div>
         </form>

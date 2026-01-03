@@ -33,7 +33,13 @@ export function LoginPage() {
             const { token, user } = response.data;
             login(token, user);
             // Redirect based on role
-            navigate(user.role === 'volunteer' ? '/my-dashboard' : '/dashboard');
+            if (user.role === 'volunteer') {
+                navigate('/my-dashboard');
+            } else if (user.role === 'voter') {
+                navigate('/voter-dashboard');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
         }

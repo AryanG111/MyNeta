@@ -9,7 +9,7 @@ const router = express.Router();
 // Public voter sign-up
 router.post('/request', async (req, res) => {
     try {
-        const { name, email, phone, password, address, area, voter_id, message } = req.body;
+        const { name, email, phone, password, address, area, ward_no, voter_id, message } = req.body;
         if (!name || !email || !phone || !password) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
@@ -22,7 +22,7 @@ router.post('/request', async (req, res) => {
 
         const password_hash = await bcrypt.hash(password, 10);
         await VoterRequest.create({
-            name, email, phone, password_hash, address, area, voter_id, message, status: 'pending'
+            name, email, phone, password_hash, address, area, ward_no, voter_id, message, status: 'pending'
         });
 
         return res.status(201).json({ message: 'Voter registration submitted – awaiting approval' });
@@ -84,10 +84,13 @@ router.post('/:id/approve', authenticateToken, authorizeRoles('admin'), async (r
         // Also create a record in Voters table so they appear in voters list
         await Voter.create({
             name: voterRequest.name,
+            email: voterRequest.email,
             phone: voterRequest.phone,
             address: voterRequest.address || voterRequest.area || '',
             category: 'supporter', // Default to supporter for registered voters
             booth: voterRequest.area || '',
+            ward_no: voterRequest.ward_no || '',
+            user_id: user.id,
             notes: `Registered via online form. Voter ID: ${voterRequest.voter_id || 'N/A'}`
         });
 

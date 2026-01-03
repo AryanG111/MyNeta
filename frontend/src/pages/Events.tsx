@@ -6,8 +6,11 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { EventForm } from '@/components/events/EventForm';
 import { useToast } from '@/context/ToastContext';
+import { useAuth } from '@/context/AuthContext';
 
 export function EventsPage() {
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
     const { addToast } = useToast();
@@ -58,9 +61,11 @@ export function EventsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Events</h2>
-                <Button onClick={handleOpenCreate}>
-                    <Plus className="mr-2 h-4 w-4" /> Create Event
-                </Button>
+                {isAdmin && (
+                    <Button onClick={handleOpenCreate}>
+                        <Plus className="mr-2 h-4 w-4" /> Create Event
+                    </Button>
+                )}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -81,14 +86,16 @@ export function EventsPage() {
                                     <div className="bg-slate-100 text-slate-700 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider">
                                         {new Date(event.event_date).toLocaleString('default', { month: 'short' })}
                                     </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleOpenEdit(event)}>
-                                            <Edit2 className="h-4 w-4 text-slate-500" />
-                                        </Button>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleDelete(event.id)}>
-                                            <Trash2 className="h-4 w-4 text-red-500" />
-                                        </Button>
-                                    </div>
+                                    {isAdmin && (
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleOpenEdit(event)}>
+                                                <Edit2 className="h-4 w-4 text-slate-500" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleDelete(event.id)}>
+                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{event.title}</h3>

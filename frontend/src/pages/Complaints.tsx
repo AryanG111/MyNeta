@@ -1,10 +1,9 @@
 import { useState, useRef } from 'react';
-import { Trash2, CheckCircle, Clock, UserPlus, Camera, AlertTriangle, Image as ImageIcon, Hand } from 'lucide-react';
+import { Trash2, CheckCircle, Clock, UserPlus, Camera, AlertTriangle, Image as ImageIcon, Hand, Plus, Maximize2 } from 'lucide-react';
 import { useComplaints, useUpdateComplaintStatus, useDeleteComplaint, type Complaint } from '@/hooks/useComplaints';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
-import { Badge } from '@/components/ui/Badge';
 import { ComplaintStatusBadge } from '@/components/complaints/ComplaintStatusBadge';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
@@ -22,6 +21,10 @@ export function ComplaintsPage() {
     const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
     const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
+    const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [newComplaint, setNewComplaint] = useState({ issue: '', priority: 'medium' });
     const [resolutionNotes, setResolutionNotes] = useState('');
     const [resolutionPhoto, setResolutionPhoto] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -142,6 +145,26 @@ export function ComplaintsPage() {
         }
     };
 
+    const handleComplaintSubmit = async () => {
+        if (!newComplaint.issue) {
+            addToast('Please describe your issue', 'error');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await client.post('/complaints', newComplaint);
+            queryClient.invalidateQueries({ queryKey: ['complaints'] });
+            addToast('Complaint registered successfully!', 'success');
+            setIsComplaintModalOpen(false);
+            setNewComplaint({ issue: '', priority: 'medium' });
+        } catch {
+            addToast('Failed to register complaint', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const resetResolveForm = () => {
         setResolutionNotes('');
         setResolutionPhoto(null);
@@ -172,7 +195,7 @@ export function ComplaintsPage() {
                     <p className="text-slate-500 mt-2">Monitor and resolve voter issues.</p>
                 </div>
 
-                <div className="flex bg-slate-100 p-1 rounded-lg">
+                <div className="flex bg-slate-100 p-1 rounded-lg mr-4">
                     {['', 'pending', 'in_progress', 'resolved'].map((status) => (
                         <button
                             key={status}
@@ -186,6 +209,12 @@ export function ComplaintsPage() {
                         </button>
                     ))}
                 </div>
+
+                {user?.role === 'voter' && (
+                    <Button onClick={() => setIsComplaintModalOpen(true)} className="bg-primary hover:bg-primary-dark">
+                        <Plus className="mr-2 h-4 w-4" /> Register Complaint
+                    </Button>
+                )}
             </div>
 
             {/* Resolve Modal */}
@@ -314,14 +343,19 @@ export function ComplaintsPage() {
 
                                 {/* Resolution Preview */}
                                 {complaint.status === 'resolved' && complaint.resolution_photo && (
-                                    <div className="mb-4 p-2 bg-green-50 border border-green-200 rounded-lg">
-                                        <div className="flex items-center gap-2 text-sm text-green-700">
-                                            <ImageIcon className="h-4 w-4" />
-                                            <span>Resolution photo attached</span>
+                                    <div className="mb-4 relative group cursor-pointer" onClick={() => { setSelectedImage(`${client.defaults.baseURL?.replace('/api', '')}${complaint.resolution_photo}`); setIsImageViewerOpen(true); }}>
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                            <Maximize2 className="text-white h-6 w-6" />
                                         </div>
-                                        {!complaint.approved_by_admin && user?.role === 'admin' && (
-                                            <Badge variant="warning" className="mt-2">Pending Approval</Badge>
-                                        )}
+                                        <img
+                                            src={`${client.defaults.baseURL?.replace('/api', '')}${complaint.resolution_photo}`}
+                                            alt="Resolution proof"
+                                            className="w-full h-32 object-cover rounded-lg border border-green-100"
+                                        />
+                                        <div className="mt-2 flex items-center gap-2 text-xs text-green-700 font-medium">
+                                            <ImageIcon className="h-3.5 w-3.5" />
+                                            <span>Resolution proof attached</span>
+                                        </div>
                                     </div>
                                 )}
 
@@ -408,6 +442,65 @@ export function ComplaintsPage() {
                     ))
                 )}
             </div>
+
+            {/* New Complaint Modal */}
+            <Modal
+                isOpen={isComplaintModalOpen}
+                onClose={() => setIsComplaintModalOpen(false)}
+                title="Register New Complaint"
+                description="Describe the issue you are facing in your area."
+            >
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">Issue Description *</label>
+                        <textarea
+                            value={newComplaint.issue}
+                            onChange={(e) => setNewComplaint({ ...newComplaint, issue: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
+                            rows={4}
+                            placeholder="Please be specific about the problem..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">Priority</label>
+                        <select
+                            value={newComplaint.priority}
+                            onChange={(e) => setNewComplaint({ ...newComplaint, priority: e.target.value as any })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                        >
+                            <option value="low">Low - Minor issue</option>
+                            <option value="medium">Medium - Normal grievance</option>
+                            <option value="high">High - Urgent attention needed</option>
+                        </select>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button variant="ghost" onClick={() => setIsComplaintModalOpen(false)}>Cancel</Button>
+                        <Button onClick={handleComplaintSubmit} disabled={isSubmitting || !newComplaint.issue}>
+                            {isSubmitting ? 'Registering...' : 'Register Complaint'}
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Image Viewer Modal */}
+            <Modal
+                isOpen={isImageViewerOpen}
+                onClose={() => setIsImageViewerOpen(false)}
+                title="Resolution Proof"
+                className="max-w-4xl"
+            >
+                <div className="relative">
+                    {selectedImage && (
+                        <img
+                            src={selectedImage}
+                            alt="Resolution Proof Full"
+                            className="w-full max-h-[70vh] object-contain rounded-lg"
+                        />
+                    )}
+                </div>
+            </Modal>
         </div>
     );
 }
